@@ -1,2 +1,0 @@
-res/duals_concept.png
-../res/tilesets/test.png
