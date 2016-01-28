@@ -1,4 +1,5 @@
-#include <SDL.h>
+#include <sdl.h>
+
 #include <iostream>
 #include "LevelReader.h"
 #include "Game.h"

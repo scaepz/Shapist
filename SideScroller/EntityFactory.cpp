@@ -124,6 +124,7 @@ bool EntityFactory::CreateEntity(char id, int x, int y)
 			}
 		}
 	}
+	return false;
 }
 
 CEventTrigger* EntityFactory::CreateEvent(const string & file, int startRow, int x, int y)
