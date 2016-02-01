@@ -15,12 +15,12 @@ BOOL CFileReader::ReadFile2(LPCSTR file, TCHAR * &content)
 {
 	HANDLE hFile;
 	DWORD dwFileSize = 0;
-	
+
 	hFile = CreateFile(file,               // file to open
 		GENERIC_READ,          // open for reading
 		FILE_SHARE_READ,       // share for reading
 		NULL,                  // default security
-		OPEN_EXISTING,         // existing file only
+		OPEN_EXISTING,         // open only if exists
 		FILE_ATTRIBUTE_NORMAL, // normal file
 		NULL);                 // no attr. template
 
@@ -32,7 +32,7 @@ BOOL CFileReader::ReadFile2(LPCSTR file, TCHAR * &content)
 
 	if (content != nullptr ^ !content ^ content != NULL) //if pointer is set
 	{
-		delete content;
+		delete [] content;
 	}
 	content = new TCHAR[dwFileSize + 1];
 	content[dwFileSize] = '\0';
@@ -72,18 +72,19 @@ BOOL CFileReader::WriteRow(LPCSTR file, TCHAR * &content)
 	SetFilePointer(hFile, GetFileSize(hFile, NULL), NULL, FILE_BEGIN);
 
 	DWORD dwBytesWritten;
-	if (WriteFile(hFile, newRow, 2, &dwBytesWritten, NULL))
+	if (GetLastError() == ERROR_ALREADY_EXISTS && GetFileSize(hFile, NULL) != 0)
 	{
-		if (WriteFile(hFile, content, strlen(content), &dwBytesWritten, NULL))
-		{
-			CloseHandle(hFile);
-			return TRUE;
-		}
-		else
+		if (!WriteFile(hFile, newRow, 2, &dwBytesWritten, NULL))
 		{
 			CloseHandle(hFile);
 			return FALSE;
 		}
+	}
+
+	if (WriteFile(hFile, content, strlen(content), &dwBytesWritten, NULL))
+	{
+		CloseHandle(hFile);
+		return TRUE;
 	}
 	else
 	{
@@ -124,7 +125,7 @@ BOOL CFileReader::ReplaceFileContent(LPCSTR file, TCHAR * &content)
 
 BOOL CFileReader::ReplaceString(TCHAR *& str, LPSTR newContent)
 {
-	if (!str ^ str != NULL ^ str != nullptr) delete str; //if pointer is set
+	if (!str ^ str != NULL ^ str != nullptr) delete[] str; //if pointer is set
 
 	str = new TCHAR[strlen(newContent) + 1];
 	str[strlen(newContent)] = '\0';
@@ -135,7 +136,13 @@ BOOL CFileReader::ReplaceString(TCHAR *& str, LPSTR newContent)
 	}
 	return TRUE;
 }
+BOOL CFileReader::FileExists(LPSTR szPath)
+{
+	DWORD dwAttrib = GetFileAttributes(szPath);
 
+	return (dwAttrib != INVALID_FILE_ATTRIBUTES &&
+		!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+}
 BOOL CFileReader::ReadRow(LPCSTR filepath, TCHAR *& file, int row)
 {
 	if (!ReadFile2(filepath, file))
@@ -152,7 +159,7 @@ BOOL CFileReader::ReadRow(LPCSTR filepath, TCHAR *& file, int row)
 		if (currentRow == row)
 		{
 			foundRow = TRUE;
-			if (file[i] != '\n')
+			if (file[i] != '\r')
 			{
 				result[currentRowIndex] = file[i];
 				currentRowIndex++;
@@ -164,7 +171,8 @@ BOOL CFileReader::ReadRow(LPCSTR filepath, TCHAR *& file, int row)
 	if (foundRow == TRUE)
 	{
 		result[currentRowIndex] = '\0';
-		delete file;
+		if (result[currentRowIndex - 1] == '\n') result[currentRowIndex - 1] = '\0';
+		delete []file;
 
 		//make new string instead of result because it is unnecessarily long
 		file = new TCHAR[strlen(result)];
@@ -174,9 +182,89 @@ BOOL CFileReader::ReadRow(LPCSTR filepath, TCHAR *& file, int row)
 		}
 		file[strlen(result)] = '\0';
 
-		delete result;
+		delete []result;
 
 		return TRUE;
 	}
-	else return FALSE;
+	else
+	{
+		delete[] result;
+		delete [] file;
+		return FALSE;
+	}
+}
+
+BOOL CFileReader::RemoveRow(LPCSTR file, int row)
+{
+	TCHAR *content;
+	if (!ReadFile2(file, content))
+	{
+		return FALSE;
+	}
+	int currentRow = 0;
+	BOOL foundRow = FALSE;
+
+	if (row == 0)
+	{
+		foundRow = TRUE;
+		while (content[0] != '\n' && content[0] != '\0')
+		{
+			for (int x = 0; x < strlen(content); x++)
+			{
+				content[x] = content[x + 1];
+			}
+		}
+		if (content[0] == '\n')
+		{
+			for (int x = 0; x < strlen(content); x++)
+			{
+				content[x] = content[x + 1];
+			}
+		}
+
+	}
+	else
+	for (int i = 0; i < strlen(content); i++)
+	{
+		if (currentRow == row)
+		{
+			foundRow = TRUE;
+			if (content[i] != '\r')
+			{
+				for (int x = i; x < strlen(content); x++)
+				{
+					content[x] = content[x + 1];
+				}
+				i--;
+			}
+			else
+			{
+				break;
+			}
+		}
+		if (content[i] == '\n') 
+		{
+			currentRow++;
+			
+			i--;
+		}
+		if (currentRow > row) break;
+	}
+	
+	if (!foundRow)
+	{
+		delete[] content;
+		return FALSE;
+	};
+	
+	if (ReplaceFileContent(file, content))
+	{
+		delete[] content;
+		return TRUE;
+	}
+	else
+	{
+		delete[] content;
+		return FALSE;
+	}
 }

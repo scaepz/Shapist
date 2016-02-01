@@ -20,6 +20,7 @@ void CLevelReader::importLevel(std::string path)
 	std::cout << levelString;
 }
 
+
 bool CLevelReader::NextTile()
 {
 	if (levelString.size() > currentTileNumber * 2)

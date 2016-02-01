@@ -67,9 +67,6 @@
     <Filter Include="Pre-Game">
       <UniqueIdentifier>{733be130-2fbe-46d5-a46d-bc0513769d98}</UniqueIdentifier>
     </Filter>
-    <Filter Include="NewFilter1">
-      <UniqueIdentifier>{0faf675a-9295-42dc-8160-228ade9d6fdf}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Audio">
       <UniqueIdentifier>{1519634f-0ee8-4f3d-a742-11339f11501d}</UniqueIdentifier>
     </Filter>

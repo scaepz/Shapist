@@ -106,7 +106,7 @@ void CPhysicsHandler::FixCollision(int index)
 									{
 										stopDir[horizontal] = true;
 									}
-									else if ((tile->pos[0]) * standardTileSize > obj->pos[0] + obj->GetWidth())
+									else if ((tile->pos[0]) * standardTileSize > obj->pos[0] + obj->GetWidth())							
 									{
 										stopDir[horizontal] = true;
 									}
@@ -119,6 +119,10 @@ void CPhysicsHandler::FixCollision(int index)
 										stopDir[vertical] = true;
 									}
 									collision = false;
+								}
+								if (stopDir[horizontal] && !stopDir[vertical])
+								{
+									obj->pos[1] += counter * obj->velocity[1];
 								}
 							}
 						}

@@ -12,7 +12,7 @@ CAnimate::CAnimate(int x, int y, int textureId, int size, vector<CWeapon*> & _we
 	renderOrder = 2;
 	SetLoot(redHP);
 	stamina = MAX_STAMINA;
-	staminaRegenPerMs = 0.03f;
+	staminaRegenPerMs = 0.035f;
 	staminaRedness = 0;
 }
 
@@ -354,7 +354,7 @@ bool CAnimate::Attack()
 			Reload();
 			return true;
 		}
-
+		else return false;
 	}
 }
 
